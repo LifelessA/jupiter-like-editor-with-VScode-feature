@@ -61,8 +61,8 @@ The ## PyQt Jupyter-Style Editor brings the dynamic feel of Jupyter Notebooks in
 1. **Clone the repository**:
 
    ```bash
-   git clone https://github.com/yourusername/pyqt-jupyter-editor.git
-   cd pyqt-jupyter-editor
+   git clone https://github.com/LifelessA/jupiter-like-editor-with-VScode-feature
+   cd jupiter-like-editor-with-VScode-feature
 ````
 
 2. **Set up a virtual environment**:
