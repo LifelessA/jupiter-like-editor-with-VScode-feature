@@ -29,14 +29,14 @@ Make sure the following image files are placed in a folder named `screenshots/` 
 
 ## 🔥 Overview
 
-> **Crafted through Vibe Coding** – built in the flow, with love for interactive tools and Python power!
+> ## Crafted through Vibe Coding – built in the flow, with love for interactive tools and Python power!
 
-The **PyQt Jupyter-Style Editor** brings the dynamic feel of Jupyter Notebooks into a sleek and customizable desktop app:
+The ## PyQt Jupyter-Style Editor brings the dynamic feel of Jupyter Notebooks into a sleek and customizable desktop app:
 
-- Powered by **PyQt6** & **QtWebEngine** for smooth GUI rendering
-- Enhanced with **CodeMirror** and **Marked.js** for rich code + markdown editing
-- Integrated with **Jedi** to enable smart, real-time Python autocompletion
-- Designed for **data science**, **prototyping**, and **teaching** workflows
+- Powered by ### PyQt6 & ###QtWebEngine for smooth GUI rendering
+- Enhanced with ### CodeMirror and ### Marked.js for rich code + markdown editing
+- Integrated with ### Jedi to enable smart, real-time Python autocompletion
+- Designed for ### data science, ### prototyping, and ###teaching workflows
 
 ---
 
@@ -44,15 +44,15 @@ The **PyQt Jupyter-Style Editor** brings the dynamic feel of Jupyter Notebooks i
 
 | Feature                   | Description                                                                                 |
 |---------------------------|---------------------------------------------------------------------------------------------|
-| **Code Cells**            | Write and execute Python code in structured cells.                                          |
-| **Markdown Cells**        | Document your work beautifully using Markdown with live previews.                          |
-| **Inline Output**         | Instantly visualize DataFrames and plots beneath each cell.                                 |
-| **Session Management**    | Save/load your work in JSON format for portability.                                         |
-| **PDF Export**            | Export entire notebooks to professional-looking PDFs.                                       |
-| **Autocompletion**        | Context-aware suggestions using Jedi — activated with `.` or Ctrl+Space.                   |
-| **Suggestion Dropdown**   | Elegant autocompletion popup for quick keyword or object access (see preview below).        |
-| **Keyboard Shortcuts**    | Familiar keybindings like Shift+Enter, Ctrl+/, and more.                                    |
-| **Dark Theming**          | Aesthetic dark UI with CSS-based styling.                                                   |
+| Code Cells                | Write and execute Python code in structured cells.                                          |
+| Markdown Cells            | Document your work beautifully using Markdown with live previews.                           |
+| Inline Output             | Instantly visualize DataFrames and plots beneath each cell.                                 |
+| Session Management        | Save/load your work in JSON format for portability.                                         |
+| PDF Export                | Export entire notebooks to professional-looking PDFs.                                       |
+| Autocompletion            | Context-aware suggestions using Jedi — activated with `.` or Ctrl+Space.                    |
+| Suggestion Dropdown       | Elegant autocompletion popup for quick keyword or object access (see preview below).        |
+| Keyboard Shortcuts        | Familiar keybindings like Shift+Enter, Ctrl+/, and more.                                    |
+| Dark Theming              | Aesthetic dark UI with CSS-based styling.                                                   |
 
 ---
 
