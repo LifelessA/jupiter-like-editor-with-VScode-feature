@@ -1,4 +1,4 @@
-# jupiter-life-editor-with-VScode-feature
+# jupiter-like-editor-with-VScode-feature
 
 
 * Feature explanations
