@@ -19,6 +19,22 @@ try:
     import jedi
 except Exception:
     os.system('pip install PyQt6 PyQt6-WebEngine matplotlib pandas jedi')
+    import json
+    import base64
+    import io
+    from html import escape
+    from contextlib import redirect_stdout
+    import ast
+
+    from PyQt6.QtCore import QObject, pyqtSlot
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QVBoxLayout, QWidget,
+                                QMenu, QFileDialog, QMessageBox)
+    from PyQt6.QtGui import QAction
+    from PyQt6.QtWebEngineWidgets import QWebEngineView
+    from PyQt6.QtWebChannel import QWebChannel
+    import matplotlib.pyplot as plt
+    import pandas as pd
+    import jedi
 
 # Configure matplotlib
 plt.switch_backend('agg')
@@ -283,6 +299,13 @@ HTML_CONTENT = """
         function runAllCells() {
             Object.keys(editors).forEach(id => runCell(id));
         }
+
+        function clearCells() {
+            document.getElementById('cells').innerHTML = '';
+            for (let id in editors) {
+                delete editors[id];
+            }
+        }
     </script>
 </body>
 </html>
@@ -412,21 +435,39 @@ class MainWindow(QMainWindow):
             QMessageBox.critical(self, "Save Error", "No data to save.")
             return
         session = json.loads(data)
-        path, _ = QFileDialog.getSaveFileName(self, "Save Session", "", "JSON Files (*.json)")
+        path, selected_filter = QFileDialog.getSaveFileName(
+            self, "Save Session", "", "JSON Files (*.json);;Jupyter Notebook (*.ipynb)"
+        )
         if path:
-            if not path.endswith('.json'):
-                path += '.json'
-            with open(path, 'w') as f:
-                json.dump(session, f, indent=2)
+            if selected_filter == "JSON Files (*.json)":
+                if not path.endswith('.json'):
+                    path += '.json'
+                with open(path, 'w') as f:
+                    json.dump(session, f, indent=2)
+            elif selected_filter == "Jupyter Notebook (*.ipynb)":
+                if not path.endswith('.ipynb'):
+                    path += '.ipynb'
+                notebook = self.to_notebook(session)
+                with open(path, 'w') as f:
+                    json.dump(notebook, f, indent=2)
             QMessageBox.information(self, "Saved", f"Session saved to {path}")
 
     def load_session(self):
-        path, _ = QFileDialog.getOpenFileName(self, "Load Session", "", "JSON Files (*.json)")
+        path, selected_filter = QFileDialog.getOpenFileName(
+            self, "Load Session", "", "JSON Files (*.json);;Jupyter Notebook (*.ipynb)"
+        )
         if not path:
             return
         with open(path) as f:
-            session = json.load(f)
-        js = ''.join(
+            data = json.load(f)
+        if selected_filter == "JSON Files (*.json)":
+            session = data
+        elif selected_filter == "Jupyter Notebook (*.ipynb)":
+            session = self.from_notebook(data)
+        else:
+            QMessageBox.critical(self, "Load Error", "Unsupported file format.")
+            return
+        js = "clearCells();" + ''.join(
             f"addCell('{c['type']}'); editors[document.querySelector('.cell:last-child').id].setValue({json.dumps(c['code'])});"
             for c in session
         )
@@ -437,6 +478,54 @@ class MainWindow(QMainWindow):
         if not path:
             return
         self.view.page().printToPdf(lambda data: open(path, 'wb').write(data) if data else None)
+
+    def to_notebook(self, session):
+        cells = []
+        for cell in session:
+            source = cell['code'].splitlines(keepends=True)
+            if source and not source[-1].endswith('\n'):
+                source[-1] += '\n'
+            if cell['type'] == 'code':
+                cells.append({
+                    "cell_type": "code",
+                    "execution_count": None,
+                    "metadata": {},
+                    "outputs": [],
+                    "source": source
+                })
+            elif cell['type'] == 'markdown':
+                cells.append({
+                    "cell_type": "markdown",
+                    "metadata": {},
+                    "source": source
+                })
+        notebook = {
+            "cells": cells,
+            "metadata": {
+                "kernelspec": {
+                    "display_name": "Python 3",
+                    "language": "python",
+                    "name": "python3"
+                },
+                "language_info": {
+                    "name": "python"
+                }
+            },
+            "nbformat": 4,
+            "nbformat_minor": 4
+        }
+        return notebook
+
+    def from_notebook(self, notebook):
+        session = []
+        for cell in notebook['cells']:
+            if cell['cell_type'] in ['code', 'markdown']:
+                code = ''.join(cell['source'])
+                session.append({
+                    "type": cell['cell_type'],
+                    "code": code
+                })
+        return session
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
