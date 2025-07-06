@@ -1,203 +1,157 @@
-# jupiter-like-editor-with-VScode-feature
+# 🚀 PyQt Jupyter-Style Editor & Integrated Design Tool
 
-
-* Feature explanations
-* Emphasis on **crafted through Vibe Coding**
-* Screenshots for both the **GUI interface** and the **autocomplete suggestions popup**
-
----
-
-### ✅ Before using:
-
-Make sure the following image files are placed in a folder named `screenshots/` in your project directory:
-
-| Image Name              | Description                   |
-| ----------------------- | ----------------------------- |
-| `gui-interface.png`     | Full view of your editor GUI  |
-| `suggestions-popup.png` | Autocomplete dropdown feature |
-
----
-
-### ✅ Full `README.md` content:
-
-````markdown
-# 🚀 PyQt Jupyter-Style Editor
-
-> Experience the power of a Jupyter-like notebook in a standalone desktop application!
+> A standalone desktop application that brings the interactivity of Jupyter Notebooks together with a powerful built‑in design canvas!
 
 ---
 
 ## 🔥 Overview
 
-> ## Crafted through Vibe Coding – built in the flow, with love for interactive tools and Python power!
+**PyQt Jupyter-Style Editor** empowers you to:
 
-The ## PyQt Jupyter-Style Editor brings the dynamic feel of Jupyter Notebooks into a sleek and customizable desktop app:
+* Write, execute, and document Python code in cells (code & markdown) 🐍
+* Enjoy real-time smart autocompletion with Jedi integration ⚡
+* Render beautifully formatted Markdown with live previews 📝
+* Visualize DataFrames and Matplotlib plots inline 📊
+* Save/load sessions as JSON or native `.ipynb` notebooks 💾
+* Export your entire notebook to PDF (print‑ready) 📄
 
-- Powered by ### PyQt6 & ###QtWebEngine for smooth GUI rendering
-- Enhanced with ### CodeMirror and ### Marked.js for rich code + markdown editing
-- Integrated with ### Jedi to enable smart, real-time Python autocompletion
-- Designed for ### data science, ### prototyping, and ###teaching workflows
+**Design Canvas Tool** is embedded directly in the editor toolbar. Instantly create and insert custom graphics: flowcharts, diagrams, callouts, shapes, arrows, and more. All graphics are exported as SVG/HTML snippets into your notebook for seamless documentation.
 
 ---
 
 ## ✨ Key Features
 
-| Feature                   | Description                                                                                 |
-|---------------------------|---------------------------------------------------------------------------------------------|
-| Code Cells                | Write and execute Python code in structured cells.                                          |
-| Markdown Cells            | Document your work beautifully using Markdown with live previews.                           |
-| Inline Output             | Instantly visualize DataFrames and plots beneath each cell.                                 |
-| Session Management        | Save/load your work in JSON format for portability.                                         |
-| PDF Export                | Export entire notebooks to professional-looking PDFs.                                       |
-| Autocompletion            | Context-aware suggestions using Jedi — activated with `.` or Ctrl+Space.                    |
-| Suggestion Dropdown       | Elegant autocompletion popup for quick keyword or object access (see preview below).        |
-| Keyboard Shortcuts        | Familiar keybindings like Shift+Enter, Ctrl+/, and more.                                    |
-| Dark Theming              | Aesthetic dark UI with CSS-based styling.                                                   |
+| Feature                     | Description                                                                             |
+| --------------------------- | --------------------------------------------------------------------------------------- |
+| **Code & Markdown Cells**   | Structured cells for code execution and Markdown documentation.                         |
+| **Inline Output**           | Auto-capture stdout, DataFrames, plots, and display under each cell.                    |
+| **Smart Autocomplete**      | Jedi-powered suggestions triggered on `.` or `Ctrl+Space`.                              |
+| **Session Management**      | Save and load sessions (`.json` or `.ipynb`) preserving cell types and order.           |
+| **PDF Export**              | One-click PDF export of your entire notebook via Qt's `printToPdf`.                     |
+| **Design Tool Integration** | Launch a full-featured canvas (`Design` button) to draw shapes, arrows, text, and more. |
+| **Graphic Insertion**       | Apply your design to insert as an SVG/HTML Markdown cell in the notebook.               |
+| **Crop & Transparent BG**   | Define crop areas and toggle background transparency before export.                     |
+| **Flowchart & Misc Shapes** | Parallelogram, trapezoid, cylinder, cloud, lightning bolt, heart, and other built‑ins.  |
+| **Arrows & Callouts**       | Single/double arrows, speech/thought bubbles with customizable styling.                 |
+| **Text Tool**               | Add and edit text objects with font size, family, and color controls.                   |
 
 ---
 
 ## 🛠️ Installation
 
-1. **Clone the repository**:
+1. **Clone the repository**
 
    ```bash
    git clone https://github.com/LifelessA/jupiter-like-editor-with-VScode-feature.git
    cd jupiter-like-editor-with-VScode-feature
-````
+   ```
 
-2. **Set up a virtual environment**:
+2. **Create & activate virtual environment**
 
    ```bash
    python -m venv venv
-   source venv/bin/activate      # On macOS/Linux
-   venv\Scripts\activate         # On Windows
+   source venv/bin/activate      # macOS/Linux
+   venv\Scripts\activate       # Windows
    ```
 
-3. **Install dependencies**:
+3. **Install dependencies**
 
    ```bash
    pip install -r requirements.txt
    ```
 
-> Sample `requirements.txt`:
->
-> ```
-> PyQt6
-> PyQt6-WebEngine
-> matplotlib
-> pandas
-> jedi
-> ```
+### `requirements.txt`
+
+```
+PyQt6
+PyQt6-WebEngine
+matplotlib
+pandas
+jedi
+```
 
 ---
 
 ## ▶️ Quick Start
 
-To launch the editor:
-
 ```bash
 python main.py
 ```
 
-### 🧪 How to Use:
+This opens the editor. Use the toolbar:
 
-* **Add Cells**: Click **+ Code** or **+ Markdown** to add content.
-* **Run Cells**: Click **Run** or press **Shift+Enter**.
-* **Reorder/Remove**: Use **↑ ↓ Delete** buttons to modify layout.
-* **Save/Load Session**: Use menu to store or reopen `.json` sessions.
-* **Export as PDF**: One-click export to `.pdf` using Qt's `printToPdf`.
-
----
-
-## 📐 Architecture & How It Works
-
-### 🧠 Backend (PythonBridge)
-
-* Executes Python code securely via `exec` and `eval`
-* Captures:
-
-  * Standard output
-  * Exceptions
-  * Matplotlib visualizations
-  * Pandas DataFrames
-* Maintains variables using `self.locals`
-* Handles cell serialization and JSON save/load
-
-### 🌐 Frontend (HTML + JavaScript)
-
-* Uses **CodeMirror** for editing
-* Markdown rendered live via **Marked.js**
-* Communicates via `QWebChannel`
-* Custom CSS and JavaScript control layout and logic
+* `+ Code` / `+ Markdown`: Add new cells
+* `▶ Run All`: Execute all cells
+* `Design`: Open the integrated design canvas
+* **Cell Controls**: Run, Stop, Delete, Move Up/Down
 
 ---
 
-## 🎨 Customization & Theming
+## 🖼️ Screenshots
 
-Update your UI through CSS variables in the HTML:
+**Main Editor Interface**
+![Editor GUI](screenshots/gui-interface.png)
 
-```css
-:root {
-  --bg-color: #1e1e1e;
-  --cell-bg: #2d2d2d;
-  --border-color: #3a3a3a;
-  --toolbar-bg: #252526;
-}
-```
+**Autocomplete Suggestions**
+![Autocomplete Popup](screenshots/suggestions-popup.png)
 
-You can also:
-
-* Modify font families and sizes
-* Tweak CodeMirror settings
-* Add new keyboard shortcuts or UI widgets
+**Design Canvas Tool**
+![Design Tool](screenshots/design-tool.png)
 
 ---
 
-## 🖼️ UI Previews
+## 📐 Architecture
 
-### 🧪 Main GUI Interface
+### Backend (PythonBridge)
 
-> Sleek, dark-themed PyQt interface replicating Jupyter functionality:
+* Executes user code securely via `exec`/`eval`.
+* Captures stdout, exceptions, Matplotlib figures, and Pandas DataFrames.
+* Maintains a persistent `locals` dict for state across cells.
+* Exposes slots: `run_code`, `get_completions`, and `open_design_tool`.
 
-![image](https://github.com/user-attachments/assets/54b57519-51a0-45d3-bb06-07dc551f3876)
+### Frontend (HTML + JavaScript)
 
+* **CodeMirror** for code/markdown editing with custom theme.
+* **Marked.js** for Markdown rendering.
+* **QWebChannel** bridges JS ↔ Python.
+* Dynamic cell management: add, run, stop, delete, reorder.
 
 ---
 
-### 💡 Autocomplete Suggestion Feature
+## 🎨 Design Canvas Details
 
-> Powered by Jedi — get intelligent keyword completions and Python hints:
+* **Tools Panel**: Select, Crop, Text, Delete.
+* **Basic Shapes**: Rectangle (rounded), Circle/Oval, Triangle, Diamond, Pentagon, Hexagon, Octagon, Star, Cross, Ring.
+* **Flowchart & Misc**: Parallelogram, Trapezoid, Cylinder, Document, Cloud, Heart, Moon, Lightning Bolt.
+* **Arrows & Callouts**: Arrow, Double Arrow, Speech Bubble, Thought Bubble.
+* **Settings**:
 
-![Autocomplete Suggestions]![image](https://github.com/user-attachments/assets/6b48c16f-100f-4aab-8038-8e4c7a7ab96c)
+  * Fill color, stroke color, stroke width
+  * Font size & family for text
+  * Canvas background color / transparent toggle
+* **Canvas Interaction**:
 
+  * Mouse-driven drawing, dragging, resizing via handles
+  * Crop area selection for focused export
+* **Export**:
+
+  * Generate clean SVG/HTML snippet
+  * Automatically insert into a new Markdown cell
 
 ---
 
 ## 🤝 Contributing
 
-Your contributions are welcome!
-To contribute:
-
-1. Fork the project
-2. Create your feature branch: `git checkout -b feat/new-feature`
-3. Commit your changes: `git commit -am 'Add new feature'`
-4. Push: `git push origin feat/new-feature`
-5. Submit a Pull Request
+1. Fork the repo
+2. Create feature branch: `git checkout -b feat/my-feature`
+3. Commit changes: `git commit -m 'Add my feature'`
+4. Push branch: `git push origin feat/my-feature`
+5. Open a Pull Request
 
 ---
 
 ## 📄 License
 
 Licensed under the **MIT License**.
-See [LICENSE](LICENSE) for full license text.
 
----
-
-> 💡 Crafted with ❤️ through **Vibe Coding** by Aniket Raj
-> *Built in flow, refined with purpose.*
-
-```
-
----
-
-
+> Crafted with ❤️ through Vibe Coding by Aniket Raj — built in flow, refined with purpose.
