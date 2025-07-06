@@ -1,4 +1,4 @@
-# 🚀 PyQt Jupyter-Style Editor & Integrated Design Tool
+# 🚀 PyQt Jupiter-Style Editor & Integrated Design Tool
 
 > A standalone desktop application that brings the interactivity of Jupyter Notebooks together with a powerful built‑in design canvas!
 
