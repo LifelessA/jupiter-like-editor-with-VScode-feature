@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Design Tool</title>
+    <style>
+        :root {
+            --bg-dark: #2a2a2a;
+            --bg-darker: #1e1e1e;
+            --border: #444;
+            --primary: #007bff;
+            --danger: #c82333;
+            --text: #f0f0f0;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            margin: 0; 
+            background: var(--bg-darker); 
+            color: var(--text);
+            overflow: hidden;
+        }
+        
+        #top-toolbar {
+            background: var(--bg-dark);
+            padding: 8px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        
+        .toolbar-btn {
+            padding: 6px 12px;
+            background: #404040;
+            color: white;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: #505050;
+        }
+        
+        #main-container { 
+            display: flex; 
+            flex-grow: 1; 
+            overflow: hidden; 
+        }
+        
+        #toolbox { 
+            width: 240px; 
+            background: var(--bg-dark); 
+            padding: 10px; 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            overflow-y: auto; 
+        }
+        
+        #canvas-area { 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: #333;
+        }
+        
+        #canvas-container { 
+            flex-grow: 1; 
+            position: relative; 
+            overflow: auto; 
+            background: #555; 
+            text-align: center; 
+            padding: 20px; 
+        }
+        
+        #canvas { 
+            background: white; 
+            box-shadow: 0 0 10px rgba(0,0,0,0.5); 
+        }
+        
+        #bottom-panel { 
+            padding: 10px; 
+            background: var(--bg-dark); 
+            border-top: 1px solid var(--border); 
+            text-align: right; 
+            flex-shrink: 0; 
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .tool-section { 
+            margin-bottom: 15px; 
+        }
+        
+        .tool-section h4 { 
+            margin-top: 0; 
+            margin-bottom: 10px; 
+            border-bottom: 1px solid var(--border); 
+            padding-bottom: 5px; 
+            color: #aaa;
+        }
+        
+        .tool-button { 
+            display: block; 
+            width: 100%; 
+            padding: 8px; 
+            margin-bottom: 5px; 
+            background: #404040; 
+            color: white; 
+            border: 1px solid #555; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            text-align: left;
+            transition: all 0.2s;
+        }
+        
+        .tool-button:hover { 
+            background: #505050; 
+        }
+        
+        .tool-button.active { 
+            background: var(--primary); 
+            border-color: var(--primary); 
+        }
+        
+        .settings-grid { 
+            display: grid; 
+            grid-template-columns: auto 1fr; 
+            gap: 5px 10px; 
+            align-items: center; 
+        }
+        
+        .settings-grid label { 
+            text-align: right; 
+            font-size: 0.9em;
+        }
+        
+        .settings-grid input, 
+        .settings-grid select { 
+            width: 100%; 
+            padding: 4px;
+            background: #404040;
+            border: 1px solid #555;
+            color: white;
+            border-radius: 4px;
+        }
+        
+        input[type="color"] {
+            height: 30px;
+            padding: 2px;
+        }
+        
+        input[type="number"] {
+            width: 80px;
+        }
+        
+        .status-bar {
+            color: #aaa;
+            font-size: 0.9em;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div id="top-toolbar">
+        <button class="toolbar-btn" id="new-btn">New</button>
+        <button class="toolbar-btn" id="clear-btn">Clear Canvas</button>
+        <button class="toolbar-btn" id="apply-btn-top">Apply</button>
+        <button class="toolbar-btn" id="close-btn">Close</button>
+    </div>
+    
+    <div id="main-container">
+        <div id="toolbox">
+            <div class="tool-section">
+                <h4>Tools</h4>
+                <button class="tool-button" id="select-tool">Select</button>
+                <button class="tool-button" id="crop-tool">Crop Area</button>
+                <button class="tool-button" id="text-tool">Text</button>
+                <button class="tool-button" id="delete-tool" style="background: var(--danger);">Delete Selected</button>
+            </div>
+            
+            <div class="tool-section">
+                <h4>Basic Shapes</h4>
+                <button class="tool-button" data-shape="rectangle">Rectangle</button>
+                <button class="tool-button" data-shape="rounded_rect">Rounded Rectangle</button>
+                <button class="tool-button" data-shape="circle">Circle / Oval</button>
+                <button class="tool-button" data-shape="line">Line</button>
+                <button class="tool-button" data-shape="triangle">Triangle</button>
+                <button class="tool-button" data-shape="right_triangle">Right Triangle</button>
+                <button class="tool-button" data-shape="diamond">Diamond</button>
+                <button class="tool-button" data-shape="pentagon">Pentagon</button>
+                <button class="tool-button" data-shape="hexagon">Hexagon</button>
+                <button class="tool-button" data-shape="octagon">Octagon</button>
+                <button class="tool-button" data-shape="star">Star</button>
+                <button class="tool-button" data-shape="cross">Cross</button>
+                <button class="tool-button" data-shape="ring">Ring</button>
+            </div>
+            
+            <div class="tool-section">
+                <h4>Arrows & Callouts</h4>
+                <button class="tool-button" data-shape="arrow">Arrow</button>
+                <button class="tool-button" data-shape="double_arrow">Double Arrow</button>
+                <button class="tool-button" data-shape="speech_bubble">Speech Bubble</button>
+                <button class="tool-button" data-shape="thought_bubble">Thought Bubble</button>
+            </div>
+            
+            <div class="tool-section">
+                <h4>Flowchart & Misc</h4>
+                <button class="tool-button" data-shape="parallelogram">Parallelogram</button>
+                <button class="tool-button" data-shape="trapezoid">Trapezoid</button>
+                <button class="tool-button" data-shape="cylinder">Cylinder (Database)</button>
+                <button class="tool-button" data-shape="document">Document</button>
+                <button class="tool-button" data-shape="heart">Heart</button>
+                <button class="tool-button" data-shape="cloud">Cloud</button>
+                <button class="tool-button" data-shape="moon">Moon</button>
+                <button class="tool-button" data-shape="lightning">Lightning Bolt</button>
+            </div>
+            
+            <div id="settings-panel" class="tool-section">
+                <h4>Settings</h4>
+                <div class="settings-grid">
+                    <label for="fill-color">Fill:</label>
+                    <input type="color" id="fill-color" value="#cccccc">
+                    <label for="stroke-color">Stroke:</label>
+                    <input type="color" id="stroke-color" value="#000000">
+                    <label for="stroke-width">Width:</label>
+                    <input type="number" id="stroke-width" value="2" min="0" max="100">
+                </div>
+            </div>
+            
+            <div id="text-settings-panel" class="tool-section" style="display:none;">
+                <h4>Text</h4>
+                <div class="settings-grid">
+                    <label for="font-size">Size:</label>
+                    <input type="number" id="font-size" value="24" min="1">
+                    <label for="font-family">Font:</label>
+                    <select id="font-family">
+                        <option>Arial</option>
+                        <option>Verdana</option>
+                        <option>Georgia</option>
+                        <option>Times New Roman</option>
+                        <option>Courier New</option>
+                        <option>Impact</option>
+                        <option>Comic Sans MS</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="tool-section">
+                <h4>Canvas</h4>
+                <div class="settings-grid">
+                    <label for="bg-color">BG Color:</label>
+                    <input type="color" id="bg-color" value="#ffffff">
+                </div>
+                <button class="tool-button" id="transparent-bg-tool">Transparent BG</button>
+            </div>
+        </div>
+        
+        <div id="canvas-area">
+            <div id="canvas-container">
+                <canvas id="canvas"></canvas>
+            </div>
+            
+            <div id="bottom-panel">
+                <div class="status-bar" id="status-bar">Ready</div>
+                <div>
+                    <button class="toolbar-btn" id="apply-button">Apply</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+    <script>
+        // --- Helper Functions (Geometry, Drawing, etc.) ---
+        function getPolygonPoints(cx, cy, sides, radius) {
+            let points = "";
+            const angle = (2 * Math.PI) / sides;
+            for (let i = 0; i < sides; i++) {
+                points += `${cx + radius * Math.cos(i * angle)},${cy + radius * Math.sin(i * angle)} `;
+            }
+            return points;
+        }
+
+        function getStarPoints(cx, cy, spikes, outerRadius, innerRadius) {
+            let points = "";
+            let rot = Math.PI / 2 * 3;
+            let x = cx;
+            let y = cy;
+            let step = Math.PI / spikes;
+
+            for (let i = 0; i < spikes; i++) {
+                x = cx + Math.cos(rot) * outerRadius;
+                y = cy + Math.sin(rot) * outerRadius;
+                points += `${x},${y} `;
+                rot += step;
+
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                points += `${x},${y} `;
+                rot += step;
+            }
+            return points;
+        }
+
+        function drawArrow(c, x, y, w, h) {
+            const headlen = Math.min(Math.abs(w), Math.abs(h)) * 0.3;
+            const angle = Math.atan2(h, w);
+            c.moveTo(x, y);
+            c.lineTo(x + w, y + h);
+            c.lineTo(x + w - headlen * Math.cos(angle - Math.PI / 6), y + h - headlen * Math.sin(angle - Math.PI / 6));
+            c.moveTo(x + w, y + h);
+            c.lineTo(x + w - headlen * Math.cos(angle + Math.PI / 6), y + h - headlen * Math.sin(angle + Math.PI / 6));
+        }
+
+        function drawDoubleArrow(c, x, y, w, h) {
+            const headlen = Math.min(Math.abs(w), Math.abs(h)) * 0.3;
+            const angle = Math.atan2(h, w);
+            c.moveTo(x, y);
+            c.lineTo(x + w, y + h);
+            c.lineTo(x + w - headlen * Math.cos(angle - Math.PI / 6), y + h - headlen * Math.sin(angle - Math.PI / 6));
+            c.moveTo(x + w, y + h);
+            c.lineTo(x + w - headlen * Math.cos(angle + Math.PI / 6), y + h - headlen * Math.sin(angle + Math.PI / 6));
+            c.moveTo(x, y);
+            c.lineTo(x + headlen * Math.cos(angle - Math.PI / 6), y + headlen * Math.sin(angle - Math.PI / 6));
+            c.moveTo(x, y);
+            c.lineTo(x + headlen * Math.cos(angle + Math.PI / 6), y + headlen * Math.sin(angle + Math.PI / 6));
+        }
+
+        function drawSpeechBubble(c, x, y, w, h) {
+            const radius = Math.min(Math.abs(w), Math.abs(h)) * 0.1;
+            c.roundRect(x, y, w, h, radius);
+            c.moveTo(x + w / 2, y + h);
+            c.lineTo(x + w / 2, y + h + 20);
+            c.lineTo(x + w / 2 + 20, y + h);
+        }
+
+        function drawThoughtBubble(c, x, y, w, h) {
+            const radius = Math.min(Math.abs(w), Math.abs(h)) * 0.1;
+            c.roundRect(x, y, w, h, radius);
+            c.moveTo(x + w / 2, y + h);
+            c.arc(x + w / 2 + 10, y + h + 10, 5, 0, 2 * Math.PI);
+            c.arc(x + w / 2 + 20, y + h + 20, 8, 0, 2 * Math.PI);
+        }
+
+        function drawCylinder(c, x, y, w, h) {
+            const rh = h * 0.2;
+            c.ellipse(x + w / 2, y + rh / 2, w / 2, rh / 2, 0, Math.PI, 2 * Math.PI);
+            c.rect(x, y + rh / 2, w, h - rh);
+            c.ellipse(x + w / 2, y + h - rh / 2, w / 2, rh / 2, 0, 0, Math.PI);
+            c.moveTo(x, y + rh / 2);
+            c.lineTo(x, y + h - rh / 2);
+            c.moveTo(x + w, y + rh / 2);
+            c.lineTo(x + w, y + h - rh / 2);
+        }
+
+        function drawDocument(c, x, y, w, h) {
+            c.rect(x, y, w, h);
+            c.moveTo(x, y + h * 0.8);
+            c.quadraticCurveTo(x + w / 2, y + h * 0.6, x + w, y + h * 0.8);
+        }
+
+        function drawHeart(c, x, y, w, h) {
+            c.moveTo(x + w / 2, y + h / 4);
+            c.bezierCurveTo(x + w / 2, y, x, y, x, y + h / 2);
+            c.bezierCurveTo(x, y + h, x + w / 2, y + h, x + w / 2, y + h);
+            c.bezierCurveTo(x + w / 2, y + h, x + w, y + h, x + w, y + h / 2);
+            c.bezierCurveTo(x + w, y, x + w / 2, y, x + w / 2, y + h / 4);
+            c.closePath();
+        }
+
+        function drawCloud(c, x, y, w, h) {
+            c.ellipse(x + w * 0.2, y + h * 0.5, w * 0.2, h * 0.3, 0, 0, 2 * Math.PI);
+            c.ellipse(x + w * 0.5, y + h * 0.3, w * 0.3, h * 0.4, 0, 0, 2 * Math.PI);
+            c.ellipse(x + w * 0.8, y + h * 0.5, w * 0.2, h * 0.3, 0, 0, 2 * Math.PI);
+            c.ellipse(x + w * 0.35, y + h * 0.7, w * 0.25, h * 0.3, 0, 0, 2 * Math.PI);
+            c.ellipse(x + w * 0.65, y + h * 0.7, w * 0.25, h * 0.3, 0, 0, 2 * Math.PI);
+        }
+
+        function drawMoon(c, x, y, w, h) {
+            c.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, 2 * Math.PI);
+            c.arc(x + w * 0.4, y + h / 2, Math.min(w, h) * 0.4, 0, 2 * Math.PI, true);
+        }
+
+        function drawLightning(c, x, y, w, h) {
+            c.moveTo(x + w * 0.5, y);
+            c.lineTo(x, y + h * 0.6);
+            c.lineTo(x + w * 0.4, y + h * 0.6);
+            c.lineTo(x + w * 0.5, y + h);
+            c.lineTo(x + w, y + h * 0.4);
+            c.lineTo(x + w * 0.6, y + h * 0.4);
+            c.closePath();
+        }
+        
+        function drawPolygon(c, cx, cy, sides, radius) {
+            const angle = (2 * Math.PI) / sides;
+            c.moveTo(cx + radius * Math.cos(0), cy + radius * Math.sin(0));
+            for (let i = 1; i < sides; i++) {
+                c.lineTo(cx + radius * Math.cos(i * angle), cy + radius * Math.sin(i * angle));
+            }
+            c.closePath();
+        }
+        
+        function drawStar(c, cx, cy, spikes, outerRadius, innerRadius) {
+            let rot = Math.PI / 2 * 3;
+            c.moveTo(cx, cy - outerRadius);
+            for (let i = 0; i < spikes; i++) {
+                let x = cx + Math.cos(rot) * outerRadius;
+                let y = cy + Math.sin(rot) * outerRadius;
+                c.lineTo(x, y);
+                rot += Math.PI / spikes;
+                
+                x = cx + Math.cos(rot) * innerRadius;
+                y = cy + Math.sin(rot) * innerRadius;
+                c.lineTo(x, y);
+                rot += Math.PI / spikes;
+            }
+            c.closePath();
+        }
+
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // --- DOM Elements ---
+        const selectTool = document.getElementById('select-tool');
+        const cropTool = document.getElementById('crop-tool');
+        const textTool = document.getElementById('text-tool');
+        const deleteTool = document.getElementById('delete-tool');
+        const transparentBgTool = document.getElementById('transparent-bg-tool');
+        const applyButton = document.getElementById('apply-button');
+        const settingsPanel = document.getElementById('settings-panel');
+        const textSettingsPanel = document.getElementById('text-settings-panel');
+        const statusBar = document.getElementById('status-bar');
+        
+        // Toolbar buttons
+        const newBtn = document.getElementById('new-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const applyTopBtn = document.getElementById('apply-btn-top');
+        const closeBtn = document.getElementById('close-btn');
+        
+        // --- Settings ---
+        const fillColorPicker = document.getElementById('fill-color');
+        const strokeColorPicker = document.getElementById('stroke-color');
+        const strokeWidthInput = document.getElementById('stroke-width');
+        const bgColorPicker = document.getElementById('bg-color');
+        const fontSizeInput = document.getElementById('font-size');
+        const fontFamilySelect = document.getElementById('font-family');
+
+        // --- State ---
+        canvas.width = 1200;
+        canvas.height = 1600;
+        let objects = [];
+        let currentTool = 'select';
+        let selectedObject = null;
+        let cropArea = null;
+        let isDrawing = false;
+        let isDragging = false;
+        let isResizing = false;
+        let resizeHandle = null;
+        let startX, startY;
+        let isTransparentBg = false;
+
+        // --- Event Listeners ---
+        function setupListeners() {
+            canvas.addEventListener('mousedown', onMouseDown);
+            canvas.addEventListener('mousemove', onMouseMove);
+            canvas.addEventListener('mouseup', onMouseUp);
+            canvas.addEventListener('dblclick', onDblClick);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Delete' || e.key === 'Backspace') {
+                    deleteSelectedObject();
+                }
+            });
+
+            selectTool.addEventListener('click', () => setActiveTool('select'));
+            cropTool.addEventListener('click', () => setActiveTool('crop'));
+            textTool.addEventListener('click', () => setActiveTool('text'));
+            document.querySelectorAll('[data-shape]').forEach(btn => {
+                btn.addEventListener('click', () => setActiveTool(btn.dataset.shape));
+            });
+
+            deleteTool.addEventListener('click', deleteSelectedObject);
+            transparentBgTool.addEventListener('click', toggleTransparentBg);
+            applyButton.addEventListener('click', applyChanges);
+            applyTopBtn.addEventListener('click', applyChanges);
+            
+            // Settings listeners
+            fillColorPicker.addEventListener('input', (e) => updateSelected('fill', e.target.value));
+            strokeColorPicker.addEventListener('input', (e) => updateSelected('stroke', e.target.value));
+            strokeWidthInput.addEventListener('input', (e) => updateSelected('strokeWidth', e.target.value));
+            fontSizeInput.addEventListener('input', (e) => updateSelected('fontSize', e.target.value));
+            fontFamilySelect.addEventListener('input', (e) => updateSelected('fontFamily', e.target.value));
+            bgColorPicker.addEventListener('input', () => {
+                isTransparentBg = false;
+                redrawCanvas();
+            });
+            
+            // Toolbar listeners
+            newBtn.addEventListener('click', () => {
+                objects = [];
+                selectedObject = null;
+                cropArea = null;
+                redrawCanvas();
+                updateStatus('New design created');
+            });
+            
+            clearBtn.addEventListener('click', () => {
+                objects = [];
+                selectedObject = null;
+                cropArea = null;
+                redrawCanvas();
+                updateStatus('Canvas cleared');
+            });
+            
+            closeBtn.addEventListener('click', () => {
+                new QWebChannel(qt.webChannelTransport, (channel) => {
+                    channel.objects.bridge.on_close();
+                });
+            });
+        }
+
+        // --- Tool/State Management ---
+        function setActiveTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-button').forEach(b => b.classList.remove('active'));
+            const activeBtn = document.getElementById(`${tool}-tool`);
+            if (activeBtn) activeBtn.classList.add('active');
+            updateStatus(`Tool selected: ${tool.replace('_', ' ')}`);
+        }
+        
+        function updateStatus(message) {
+            statusBar.textContent = message;
+        }
+
+        function deleteSelectedObject() {
+            if (selectedObject) {
+                objects = objects.filter(o => o !== selectedObject);
+                selectedObject = null;
+                updateSettingsPanel();
+                redrawCanvas();
+                updateStatus('Selected object deleted');
+            }
+        }
+        
+        function toggleTransparentBg() {
+            isTransparentBg = !isTransparentBg;
+            transparentBgTool.classList.toggle('active', isTransparentBg);
+            redrawCanvas();
+            updateStatus(`Background: ${isTransparentBg ? 'Transparent' : 'Solid'}`);
+        }
+
+        // --- Mouse Events ---
+        function getMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+        }
+
+        function onMouseDown(e) {
+            const pos = getMousePos(e);
+            startX = pos.x;
+            startY = pos.y;
+
+            if (currentTool === 'select') {
+                // Check if clicked on resize handle
+                if (selectedObject) {
+                    const handles = getResizeHandles(selectedObject);
+                    for (const handle in handles) {
+                        const h = handles[handle];
+                        if (Math.abs(startX - h.x) < 8 && Math.abs(startY - h.y) < 8) {
+                            isResizing = true;
+                            resizeHandle = handle;
+                            return;
+                        }
+                    }
+                }
+                
+                const target = getObjectAt(pos.x, pos.y);
+                setSelectedObject(target);
+                if (target) {
+                    isDragging = true;
+                    updateStatus('Dragging object');
+                } else {
+                    updateStatus('Ready');
+                }
+            } else if (currentTool === 'crop') {
+                isDrawing = true;
+                cropArea = { x: startX, y: startY, width: 0, height: 0 };
+                updateStatus('Drawing crop area');
+            } else if (currentTool === 'text') {
+                const newText = {
+                    type: 'text', text: 'Double-click to edit', x: startX, y: startY,
+                    fill: fillColorPicker.value, fontFamily: fontFamilySelect.value, fontSize: fontSizeInput.value
+                };
+                objects.push(newText);
+                setActiveTool('select');
+                setSelectedObject(newText);
+                isDragging = true;
+                updateStatus('Text object created');
+            } else { // Shape drawing
+                isDrawing = true;
+                const newShape = {
+                    type: currentTool, x: startX, y: startY, width: 0, height: 0,
+                    fill: fillColorPicker.value, stroke: strokeColorPicker.value, strokeWidth: strokeWidthInput.value
+                };
+                objects.push(newShape);
+                setSelectedObject(newShape);
+                updateStatus(`Drawing ${currentTool.replace('_', ' ')}`);
+            }
+            redrawCanvas();
+        }
+
+        function onMouseMove(e) {
+            const pos = getMousePos(e);
+            
+            if (isResizing && selectedObject) {
+                const bounds = getObjectBounds(selectedObject);
+                const dx = pos.x - startX;
+                const dy = pos.y - startY;
+                
+                switch (resizeHandle) {
+                    case 'topLeft':
+                        selectedObject.x += dx;
+                        selectedObject.y += dy;
+                        selectedObject.width -= dx;
+                        selectedObject.height -= dy;
+                        break;
+                    case 'topRight':
+                        selectedObject.y += dy;
+                        selectedObject.width += dx;
+                        selectedObject.height -= dy;
+                        break;
+                    case 'bottomLeft':
+                        selectedObject.x += dx;
+                        selectedObject.width -= dx;
+                        selectedObject.height += dy;
+                        break;
+                    case 'bottomRight':
+                        selectedObject.width += dx;
+                        selectedObject.height += dy;
+                        break;
+                }
+                
+                startX = pos.x;
+                startY = pos.y;
+                updateStatus('Resizing object');
+            } 
+            else if (isDrawing) {
+                if (currentTool === 'crop') {
+                    cropArea.width = pos.x - startX;
+                    cropArea.height = pos.y - startY;
+                } else if (selectedObject) {
+                    selectedObject.width = pos.x - startX;
+                    selectedObject.height = pos.y - startY;
+                }
+            } else if (isDragging && selectedObject) {
+                selectedObject.x += pos.x - startX;
+                selectedObject.y += pos.y - startY;
+                startX = pos.x;
+                startY = pos.y;
+            }
+            
+            // Update cursor style
+            if (currentTool === 'select') {
+                if (selectedObject) {
+                    const handles = getResizeHandles(selectedObject);
+                    let cursor = 'move';
+                    
+                    for (const handle in handles) {
+                        const h = handles[handle];
+                        if (Math.abs(pos.x - h.x) < 8 && Math.abs(pos.y - h.y) < 8) {
+                            if (handle === 'topLeft' || handle === 'bottomRight') {
+                                cursor = 'nwse-resize';
+                            } else if (handle === 'topRight' || handle === 'bottomLeft') {
+                                cursor = 'nesw-resize';
+                            }
+                            break;
+                        }
+                    }
+                    
+                    canvas.style.cursor = cursor;
+                } else {
+                    canvas.style.cursor = 'default';
+                }
+            } else if (currentTool === 'crop') {
+                canvas.style.cursor = 'crosshair';
+            } else {
+                canvas.style.cursor = 'crosshair';
+            }
+            
+            redrawCanvas();
+        }
+
+        function onMouseUp() {
+            if (isDrawing && selectedObject && Math.abs(selectedObject.width) < 5 && Math.abs(selectedObject.height) < 5) {
+                objects.pop(); // Remove tiny accidental shapes
+                setSelectedObject(null);
+                updateStatus('Object too small, removed');
+            }
+            
+            isDrawing = false;
+            isDragging = false;
+            isResizing = false;
+            resizeHandle = null;
+            
+            if (cropArea) {
+                updateStatus('Crop area defined');
+            }
+            
+            redrawCanvas();
+        }
+        
+        function onDblClick(e) {
+            const pos = getMousePos(e);
+            const target = getObjectAt(pos.x, pos.y);
+            if (target && target.type === 'text') {
+                const newText = prompt("Edit text:", target.text);
+                if (newText !== null) {
+                    target.text = newText;
+                    redrawCanvas();
+                    updateStatus('Text updated');
+                }
+            }
+        }
+
+        // --- Object Selection & Editing ---
+        function setSelectedObject(obj) {
+            selectedObject = obj;
+            updateSettingsPanel();
+            if (obj) {
+                updateStatus('Object selected');
+            }
+        }
+
+        function getObjectAt(x, y) {
+            for (let i = objects.length - 1; i >= 0; i--) {
+                const obj = objects[i];
+                const bounds = getObjectBounds(obj);
+                
+                // Simple bounding box check for now
+                if (x >= bounds.x && x <= bounds.x + bounds.width && 
+                    y >= bounds.y && y <= bounds.y + bounds.height) {
+                    return obj;
+                }
+            }
+            return null;
+        }
+
+        function updateSettingsPanel() {
+            if (selectedObject) {
+                settingsPanel.style.display = 'block';
+                fillColorPicker.value = selectedObject.fill || '#000000';
+                strokeColorPicker.value = selectedObject.stroke || '#000000';
+                strokeWidthInput.value = selectedObject.strokeWidth || 0;
+
+                if (selectedObject.type === 'text') {
+                    textSettingsPanel.style.display = 'block';
+                    fontSizeInput.value = selectedObject.fontSize;
+                    fontFamilySelect.value = selectedObject.fontFamily;
+                } else {
+                    textSettingsPanel.style.display = 'none';
+                }
+            } else {
+                settingsPanel.style.display = 'block';
+                textSettingsPanel.style.display = 'none';
+            }
+        }
+        
+        function updateSelected(property, value) {
+            if (selectedObject) {
+                selectedObject[property] = value;
+                redrawCanvas();
+                updateStatus(`Updated ${property}`);
+            }
+        }
+
+        // --- Canvas Drawing ---
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (!isTransparentBg) {
+                ctx.fillStyle = bgColorPicker.value;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+
+            objects.forEach(obj => drawObject(ctx, obj));
+
+            if (selectedObject) {
+                drawSelectionBox(ctx, selectedObject);
+            }
+            if (cropArea) {
+                drawCropArea(ctx, cropArea);
+            }
+        }
+
+        function drawObject(c, obj) {
+            c.fillStyle = obj.fill || 'transparent';
+            c.strokeStyle = obj.stroke || 'transparent';
+            c.lineWidth = obj.strokeWidth || 0;
+            
+            // For shapes that are drawn with bounding boxes, adjust to positive dimensions
+            let x = obj.x;
+            let y = obj.y;
+            let w = obj.width;
+            let h = obj.height;
+            
+            const isPath = ['line', 'arrow', 'double_arrow'].includes(obj.type);
+            if (!isPath) {
+                if (w < 0) { x += w; w = -w; }
+                if (h < 0) { y += h; h = -h; }
+            }
+
+            c.beginPath();
+            // All shapes are drawn here
+            switch (obj.type) {
+                case "rectangle": c.rect(x, y, w, h); break;
+                case "rounded_rect": 
+                    const radius = Math.min(w, h) * 0.1;
+                    c.moveTo(x + radius, y);
+                    c.arcTo(x + w, y, x + w, y + h, radius);
+                    c.arcTo(x + w, y + h, x, y + h, radius);
+                    c.arcTo(x, y + h, x, y, radius);
+                    c.arcTo(x, y, x + w, y, radius);
+                    c.closePath();
+                    break;
+                case "circle": c.ellipse(x + w / 2, y + h / 2, w / 2, h / 2, 0, 0, 2 * Math.PI); break;
+                case "line": c.moveTo(x, y); c.lineTo(x + w, y + h); break;
+                case "triangle": c.moveTo(x + w / 2, y); c.lineTo(x, y + h); c.lineTo(x + w, y + h); c.closePath(); break;
+                case "right_triangle": c.moveTo(x, y); c.lineTo(x, y + h); c.lineTo(x + w, y + h); c.closePath(); break;
+                case "diamond": c.moveTo(x + w / 2, y); c.lineTo(x + w, y + h / 2); c.lineTo(x + w / 2, y + h); c.lineTo(x, y + h / 2); c.closePath(); break;
+                case "pentagon": drawPolygon(c, x + w / 2, y + h / 2, 5, w / 2); break;
+                case "hexagon": drawPolygon(c, x + w / 2, y + h / 2, 6, w / 2); break;
+                case "octagon": drawPolygon(c, x + w / 2, y + h / 2, 8, w / 2); break;
+                case "star": drawStar(c, x + w / 2, y + h / 2, 5, w / 2, w / 4); break;
+                case "cross": 
+                    c.moveTo(x + w / 3, y); 
+                    c.lineTo(x + w / 3, y + h); 
+                    c.moveTo(x, y + h/3); 
+                    c.lineTo(x+w, y+h/3); 
+                    break;
+                case "ring": 
+                    c.arc(x + w / 2, y + h / 2, w / 2, 0, 2 * Math.PI);
+                    c.arc(x + w / 2, y + h / 2, w * 0.35, 0, 2 * Math.PI, true);
+                    break;
+                case "arrow": drawArrow(c, x, y, w, h); break;
+                case "double_arrow": drawDoubleArrow(c, x, y, w, h); break;
+                case "speech_bubble": drawSpeechBubble(c, x, y, w, h); break;
+                case "thought_bubble": drawThoughtBubble(c, x, y, w, h); break;
+                case "parallelogram": 
+                    c.moveTo(x, y + h); 
+                    c.lineTo(x + w * 0.75, y + h); 
+                    c.lineTo(x + w, y); 
+                    c.lineTo(x + w * 0.25, y); 
+                    c.closePath(); 
+                    break;
+                case "trapezoid": 
+                    c.moveTo(x, y + h); 
+                    c.lineTo(x + w, y + h); 
+                    c.lineTo(x + w * 0.8, y); 
+                    c.lineTo(x + w * 0.2, y); 
+                    c.closePath(); 
+                    break;
+                case "cylinder": drawCylinder(c, x, y, w, h); break;
+                case "document": drawDocument(c, x, y, w, h); break;
+                case "heart": drawHeart(c, x, y, w, h); break;
+                case "cloud": drawCloud(c, x, y, w, h); break;
+                case "moon": drawMoon(c, x, y, w, h); break;
+                case "lightning": drawLightning(c, x, y, w, h); break;
+                case 'text':
+                    c.font = `${obj.fontSize}px ${obj.fontFamily}`;
+                    c.textAlign = 'left';
+                    c.textBaseline = 'top';
+                    c.fillText(obj.text, obj.x, obj.y);
+                    break;
+            }
+            
+            if (obj.type !== 'text') {
+                if (obj.type !== 'line' && obj.type !== 'arrow' && obj.type !== 'double_arrow') {
+                    c.fill();
+                }
+                if (obj.strokeWidth > 0) {
+                    c.stroke();
+                }
+            }
+        }
+
+        function drawSelectionBox(c, obj) {
+            const bounds = getObjectBounds(obj);
+            c.strokeStyle = '#007bff';
+            c.lineWidth = 2;
+            c.setLineDash([5, 3]);
+            c.strokeRect(bounds.x - 4, bounds.y - 4, bounds.width + 8, bounds.height + 8);
+            c.setLineDash([]);
+
+            // Draw resize handles
+            const handles = getResizeHandles(obj);
+            c.fillStyle = '#007bff';
+            for (const handle in handles) {
+                const pos = handles[handle];
+                c.beginPath();
+                c.arc(pos.x, pos.y, 5, 0, Math.PI * 2);
+                c.fill();
+                c.strokeStyle = 'white';
+                c.lineWidth = 1;
+                c.stroke();
+            }
+        }
+
+        function getResizeHandles(obj) {
+            const bounds = getObjectBounds(obj);
+            return {
+                topLeft: { x: bounds.x, y: bounds.y },
+                topRight: { x: bounds.x + bounds.width, y: bounds.y },
+                bottomLeft: { x: bounds.x, y: bounds.y + bounds.height },
+                bottomRight: { x: bounds.x + bounds.width, y: bounds.y + bounds.height },
+            };
+        }
+
+        function drawCropArea(c, area) {
+            c.strokeStyle = '#ff0000';
+            c.lineWidth = 2;
+            c.setLineDash([8, 8]);
+            c.strokeRect(area.x, area.y, area.width, area.height);
+            c.setLineDash([]);
+        }
+
+        // --- Object Bounds ---
+        function getObjectBounds(obj) {
+            if (obj.type === 'text') {
+                ctx.font = `${obj.fontSize}px ${obj.fontFamily}`;
+                const metrics = ctx.measureText(obj.text);
+                return { 
+                    x: obj.x, 
+                    y: obj.y, 
+                    width: metrics.width, 
+                    height: parseInt(obj.fontSize) 
+                };
+            }
+            
+            // For shapes, adjust for negative width/height
+            let x = obj.x;
+            let y = obj.y;
+            let w = obj.width;
+            let h = obj.height;
+            
+            if (w < 0) { x += w; w = -w; }
+            if (h < 0) { y += h; h = -h; }
+            
+            return { x: x, y: y, width: w, height: h };
+        }
+
+        // --- Apply and Generate HTML ---
+        function applyChanges() {
+            if (!objects.length) {
+                updateStatus('No objects to apply');
+                return;
+            }
+            
+            const exportBounds = cropArea ? { 
+                x: cropArea.width < 0 ? cropArea.x + cropArea.width : cropArea.x,
+                y: cropArea.height < 0 ? cropArea.y + cropArea.height : cropArea.y,
+                width: Math.abs(cropArea.width),
+                height: Math.abs(cropArea.height)
+            } : { x: 0, y: 0, width: canvas.width, height: canvas.height };
+
+            const bgStyle = isTransparentBg ? 'background-color: transparent;' : `background-color: ${bgColorPicker.value};`;
+            let svgContent = '';
+            
+            // Add arrowhead markers for arrows
+            svgContent += `
+                <defs>
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="${strokeColorPicker.value}"/>
+                    </marker>
+                    <marker id="arrowhead-start" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto">
+                        <polygon points="10 0, 0 3.5, 10 7" fill="${strokeColorPicker.value}"/>
+                    </marker>
+                </defs>
+            `;
+
+            objects.forEach(obj => {
+                // Basic check if object is inside crop area
+                const bounds = getObjectBounds(obj);
+                if (!cropArea || (bounds.x < exportBounds.x + exportBounds.width && bounds.x + bounds.width > exportBounds.x &&
+                                 bounds.y < exportBounds.y + exportBounds.height && bounds.y + bounds.height > exportBounds.y)) {
+                    svgContent += objectToSvg(obj, -exportBounds.x, -exportBounds.y);
+                }
+            });
+
+            const finalHtml = `<div style="width:${exportBounds.width}px; height:${exportBounds.height}px; ${bgStyle}">` +
+                              `<svg width="100%" height="100%" viewBox="0 0 ${exportBounds.width} ${exportBounds.height}">${svgContent}</svg></div>`;
+
+            new QWebChannel(qt.webChannelTransport, (channel) => {
+                channel.objects.bridge.on_apply(finalHtml);
+                updateStatus('Design applied to notebook');
+            });
+        }
+        
+        function objectToSvg(obj, offsetX, offsetY) {
+            const x = obj.x + offsetX;
+            const y = obj.y + offsetY;
+            const w = obj.width;
+            const h = obj.height;
+            const fill = obj.fill || 'transparent';
+            const stroke = obj.stroke || 'transparent';
+            const strokeWidth = obj.strokeWidth || 0;
+
+            switch (obj.type) {
+                case "rectangle": 
+                    return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "rounded_rect": 
+                    const rx = Math.min(Math.abs(w), Math.abs(h)) * 0.1;
+                    return `<rect x="${x}" y="${y}" width="${Math.abs(w)}" height="${Math.abs(h)}" rx="${rx}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "circle": 
+                    return `<ellipse cx="${x + w/2}" cy="${y + h/2}" rx="${Math.abs(w/2)}" ry="${Math.abs(h/2)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "line": 
+                    return `<line x1="${x}" y1="${y}" x2="${x+w}" y2="${y+h}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "triangle": 
+                    return `<polygon points="${x + w/2},${y} ${x},${y+h} ${x+w},${y+h}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "right_triangle": 
+                    return `<polygon points="${x},${y} ${x},${y+h} ${x+w},${y+h}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "diamond": 
+                    return `<polygon points="${x + w/2},${y} ${x+w},${y+h/2} ${x + w/2},${y+h} ${x},${y+h/2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "pentagon": 
+                    return `<polygon points="${getPolygonPoints(x + w/2, y + h/2, 5, w/2)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "hexagon": 
+                    return `<polygon points="${getPolygonPoints(x + w/2, y + h/2, 6, w/2)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "octagon": 
+                    return `<polygon points="${getPolygonPoints(x + w/2, y + h/2, 8, w/2)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "star": 
+                    return `<polygon points="${getStarPoints(x + w/2, y + h/2, 5, w/2, w/4)}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "cross": 
+                    return `<path d="M${x+w/3},${y} L${x+w/3},${y+h} M${x},${y+h/3} L${x+w},${y+h/3}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "ring": 
+                    return `<path d="M${x+w/2},${y+h/2} m${-w/2},0 a${w/2},${h/2} 0 1,0 ${w},0 a${w/2},${h/2} 0 1,0 ${-w},0 Z M${x+w/2},${y+h/2} m${-w*0.35},0 a${w*0.35},${h*0.35} 0 1,1 ${w*0.7},0 a${w*0.35},${h*0.35} 0 1,1 ${-w*0.7},0 Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "arrow": 
+                    return `<line x1="${x}" y1="${y}" x2="${x+w}" y2="${y+h}" stroke="${stroke}" stroke-width="${strokeWidth}" marker-end="url(#arrowhead)" />`;
+                case "double_arrow": 
+                    return `<line x1="${x}" y1="${y}" x2="${x+w}" y2="${y+h}" stroke="${stroke}" stroke-width="${strokeWidth}" marker-start="url(#arrowhead-start)" marker-end="url(#arrowhead)" />`;
+                case "speech_bubble": 
+                    return `<path d="M${x},${y} L${x},${y+h} L${x+w},${y+h} L${x+w},${y} Z M${x+w/2},${y+h} L${x+w/2},${y+h+20} L${x+w/2+20},${y+h} Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "thought_bubble": 
+                    return `<path d="M${x},${y} L${x},${y+h} L${x+w},${y+h} L${x+w},${y} Z M${x+w/2},${y+h} L${x+w/2+10},${y+h+10} L${x+w/2+20},${y+h+20}" fill="none" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "parallelogram": 
+                    return `<polygon points="${x},${y+h} ${x+w*0.75},${y+h} ${x+w},${y} ${x+w*0.25},${y}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "trapezoid": 
+                    return `<polygon points="${x},${y+h} ${x+w},${y+h} ${x+w*0.8},${y} ${x+w*0.2},${y}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "cylinder": 
+                    return `<path d="M${x},${y+h*0.2} A${w/2},${h*0.2} 0 0,0 ${x+w},${y+h*0.2} V${y+h*0.8} A${w/2},${h*0.2} 0 0,0 ${x},${y+h*0.8} Z M${x},${y+h*0.2} A${w/2},${h*0.2} 0 0,1 ${x+w},${y+h*0.2}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "document": 
+                    return `<path d="M${x},${y} L${x},${y+h} L${x+w},${y+h} L${x+w},${y} Z M${x},${y+h*0.8} Q${x+w/2},${y+h*0.6} ${x+w},${y+h*0.8}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "heart": 
+                    return `<path d="M${x+w/2},${y+h*0.3} C${x+w*0.7},${y} ${x+w},${y+h*0.2} ${x+w/2},${y+h*0.7} C${x},${y+h*0.2} ${x+w*0.3},${y} ${x+w/2},${y+h*0.3} Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "cloud": 
+                    return `<path d="M${x+w*0.3},${y+h*0.5} Q${x},${y+h*0.5} ${x},${y+h*0.3} Q${x},${y} ${x+w*0.3},${y} Q${x+w*0.5},${y} ${x+w*0.5},${y+h*0.2} Q${x+w*0.7},${y} ${x+w},${y+h*0.3} Q${x+w},${y+h*0.5} ${x+w*0.7},${y+h*0.5} Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "moon": 
+                    return `<path d="M${x+w/2},${y} A${w/2},${h/2} 0 1,1 ${x+w/2},${y+h} A${w/4},${h/4} 0 1,0 ${x+w/2},${y} Z" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case "lightning": 
+                    return `<polygon points="${x+w*0.5},${y} ${x},${y+h*0.6} ${x+w*0.4},${y+h*0.6} ${x+w*0.5},${y+h} ${x+w},${y+h*0.4} ${x+w*0.6},${y+h*0.4}" fill="${fill}" stroke="${stroke}" stroke-width="${strokeWidth}" />`;
+                case 'text': 
+                    return `<text x="${x}" y="${y + parseInt(obj.fontSize)}" font-family="${obj.fontFamily}" font-size="${obj.fontSize}" fill="${fill}">${escapeHtml(obj.text)}</text>`;
+            }
+            return ''; // Should not happen
+        }
+
+        function escapeHtml(unsafe) {
+            return unsafe.replace(/&/g, "&amp;")
+                         .replace(/</g, "&lt;")
+                         .replace(/>/g, "&gt;")
+                         .replace(/"/g, "&quot;")
+                         .replace(/'/g, "&#039;");
+        }
+
+        // --- Init ---
+        setupListeners();
+        setActiveTool('select');
+        redrawCanvas();
+        updateStatus('Ready');
+    </script>
+</body>
+</html>
