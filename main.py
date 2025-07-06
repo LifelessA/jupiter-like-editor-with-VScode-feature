@@ -155,6 +155,7 @@ HTML_CONTENT = """
     <div id="toolbar">
         <button onclick="addCell('code')">+ Code</button>
         <button onclick="addCell('markdown')">+ Markdown</button>
+        <button onclick="python.open_design_tool()">Design</button>
         <button onclick="runAllCells()" style="margin-left: auto">▶ Run All</button>
     </div>
     <div id="cells"></div>
@@ -218,9 +219,9 @@ HTML_CONTENT = """
                 extraKeys: {
                     "Ctrl-Space": type === 'code' ? "autocomplete" : null,
                     "Ctrl-/": "toggleComment",
+                    "Shift-Enter": () => runCell(cellId),
                     "Alt-Up": "addCursorToPrevLine",
                     "Alt-Down": "addCursorToNextLine",
-                    "Shift-Enter": "newlineAndIndent",
                     "Tab": function(cm) {
                         if (cm.state.completionActive) {
                             const selected = cm.state.completionActive.data.list[cm.state.completionActive.widget.selectedHint];
@@ -240,28 +241,36 @@ HTML_CONTENT = """
             if (type === 'code') {
                 let timeout;
                 editor.on('keyup', (cm, event) => {
-                    if (event.key === '.') {
-                        CodeMirror.commands.autocomplete(cm);
-                    } else if (/[a-zA-Z0-9_]/.test(event.key)) {
+                    // Ignore navigation/control keys that are not part of the input
+                    if (event.ctrlKey || event.altKey || event.metaKey ||
+                        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+                         'Enter', 'Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+                        return;
+                    }
+
+                    // If the hint window is already active, let it handle the keypress.
+                    // This prevents the selection from resetting.
+                    if (cm.state.completionActive) {
+                        return;
+                    }
+
+                    // Trigger autocomplete on specific keys after a short delay
+                    if (event.key === '.' || /[a-zA-Z0-9_]/.test(event.key) || event.key === 'Backspace') {
                         clearTimeout(timeout);
                         timeout = setTimeout(() => {
-                            const cursor = cm.getCursor();
-                            const line = cm.getLine(cursor.line);
-                            const charBefore = cursor.ch > 0 ? line[cursor.ch - 1] : null;
-                            if (charBefore && /[a-zA-Z0-9_]/.test(charBefore)) {
-                                CodeMirror.commands.autocomplete(cm);
-                            }
-                        }, 300);
+                            // Manually trigger the autocomplete
+                            CodeMirror.commands.autocomplete(cm, null, {completeSingle: false});
+                        }, 150); // A shorter delay for better responsiveness
                     }
                 });
             } else if (type === 'markdown') {
-                let timeout;
-                editor.on('change', () => {
-                    clearTimeout(timeout);
-                    timeout = setTimeout(() => {
-                        document.getElementById(`output_${cellId}`).innerHTML =
-                            marked.parse(editor.getValue());
-                    }, 500);
+                const outputDiv = document.getElementById(`output_${cellId}`);
+                const editorWrapper = editor.getWrapperElement();
+                outputDiv.style.display = 'none';
+                outputDiv.addEventListener('click', () => {
+                    editorWrapper.style.display = 'block';
+                    outputDiv.style.display = 'none';
+                    editor.focus();
                 });
             }
         }
@@ -271,8 +280,11 @@ HTML_CONTENT = """
             if (cell.dataset.type === 'code') {
                 python.run_code(cellId, editors[cellId].getValue());
             } else {
-                document.getElementById(`output_${cellId}`).innerHTML =
-                    marked.parse(editors[cellId].getValue());
+                const outputDiv = document.getElementById(`output_${cellId}`);
+                const editorWrapper = editors[cellId].getWrapperElement();
+                outputDiv.innerHTML = marked.parse(editors[cellId].getValue());
+                outputDiv.style.display = 'block';
+                editorWrapper.style.display = 'none';
             }
         }
 
@@ -312,10 +324,15 @@ HTML_CONTENT = """
 """
 
 class PythonBridge(QObject):
-    def __init__(self, view):
+    def __init__(self, view, main_window):
         super().__init__()
         self.view = view
-        self.locals = {}
+        self.main_window = main_window
+        self.locals = {'plt': plt, 'pd': pd}
+
+    @pyqtSlot()
+    def open_design_tool(self):
+        self.main_window.openDesignTool()
 
     @pyqtSlot(str, str)
     def run_code(self, cell_id, code):
@@ -329,8 +346,8 @@ class PythonBridge(QObject):
     @pyqtSlot(str, int, int, result=list)
     def get_completions(self, code, line, column):
         try:
-            script = jedi.Script(code)
-            completions = script.complete(line + 1, column)
+            interpreter = jedi.Interpreter(code, [self.locals])
+            completions = interpreter.complete(line=line + 1, column=column)
             return [c.name for c in completions]
         except ImportError:
             print("Jedi not installed. Completion not available.")
@@ -347,15 +364,15 @@ class PythonBridge(QObject):
                 if tree.body and isinstance(tree.body[-1], ast.Expr):
                     if len(tree.body) > 1:
                         exec_code = compile(ast.Module(tree.body[:-1], type_ignores=[]), '<string>', 'exec')
-                        exec(exec_code, {'plt': plt, 'pd': pd}, self.locals)
+                        exec(exec_code, self.locals)
                     eval_code = compile(ast.Expression(tree.body[-1].value), '<string>', 'eval')
-                    result = eval(eval_code, {'plt': plt, 'pd': pd}, self.locals)
+                    result = eval(eval_code, self.locals)
                     if isinstance(result, pd.DataFrame):
                         buf.write(result.to_html())
                     elif result is not None:
                         buf.write(str(result))
                 else:
-                    exec(code, {'plt': plt, 'pd': pd}, self.locals)
+                    exec(code, self.locals)
                 fig = plt.gcf()
                 if fig.axes:
                     img_buf = io.BytesIO()
@@ -397,26 +414,55 @@ class MainWindow(QMainWindow):
     def create_menus(self):
         file_menu = QMenu("File", self)
         act_save = QAction("Save Session", self)
+        act_save.setShortcut("Ctrl+S")
         act_save.triggered.connect(self.save_session)
         file_menu.addAction(act_save)
+        act_save_as = QAction("Save As...", self)
+        act_save_as.setShortcut("Ctrl+Shift+S")
+        act_save_as.triggered.connect(self.save_session)
+        file_menu.addAction(act_save_as)
         act_load = QAction("Open Session", self)
+        act_load.setShortcut("Ctrl+O")
         act_load.triggered.connect(self.load_session)
         file_menu.addAction(act_load)
         act_pdf = QAction("Export PDF", self)
+        act_pdf.setShortcut("Ctrl+P")
         act_pdf.triggered.connect(self.export_to_pdf)
         file_menu.addAction(act_pdf)
         file_menu.addSeparator()
         act_exit = QAction("Exit", self)
+        act_exit.setShortcut("Ctrl+Q")
         act_exit.triggered.connect(self.close)
         file_menu.addAction(act_exit)
         self.menuBar().addMenu(file_menu)
 
     def setup_web_channel(self):
         self.channel = QWebChannel()
-        self.bridge = PythonBridge(self.view)
+        self.bridge = PythonBridge(self.view, self)
         self.channel.registerObject('python', self.bridge)
         self.view.page().setWebChannel(self.channel)
         self.view.setHtml(HTML_CONTENT)
+
+    def openDesignTool(self):
+        self.design_view = QWebEngineView()
+        self.design_view.setWindowTitle("Design Tool")
+        self.design_view.resize(1000, 700)
+        self.design_channel = QWebChannel()
+        self.design_bridge = DesignBridge(self)
+        self.design_channel.registerObject('bridge', self.design_bridge)
+        self.design_view.page().setWebChannel(self.design_channel)
+        
+        # Load design_animation.html from the same directory
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        design_path = os.path.join(base_dir, "design_animation.html")
+        
+        if os.path.exists(design_path):
+            with open(design_path, 'r') as file:
+                html_content = file.read()
+            self.design_view.setHtml(html_content)
+            self.design_view.show()
+        else:
+            QMessageBox.critical(self, "Error", "design_animation.html not found!")
 
     def save_session(self):
         self.view.page().runJavaScript(
@@ -467,10 +513,16 @@ class MainWindow(QMainWindow):
         else:
             QMessageBox.critical(self, "Load Error", "Unsupported file format.")
             return
-        js = "clearCells();" + ''.join(
-            f"addCell('{c['type']}'); editors[document.querySelector('.cell:last-child').id].setValue({json.dumps(c['code'])});"
-            for c in session
-        )
+        js = "clearCells();"
+        for c in session:
+            js += f"addCell('{c['type']}');"
+            js += f"editors[document.querySelector('.cell:last-child').id].setValue({json.dumps(c['code'])});"
+            if c['type'] == 'markdown':
+                js += "runCell(document.querySelector('.cell:last-child').id);"
+        self.view.page().runJavaScript(js)
+
+    def add_design_cell(self, html):
+        js = f"addCell('markdown'); editors[document.querySelector('.cell:last-child').id].setValue({json.dumps(html)}); runCell(document.querySelector('.cell:last-child').id);"
         self.view.page().runJavaScript(js)
 
     def export_to_pdf(self):
@@ -526,6 +578,19 @@ class MainWindow(QMainWindow):
                     "code": code
                 })
         return session
+
+class DesignBridge(QObject):
+    def __init__(self, main_window):
+        super().__init__()
+        self.main_window = main_window
+
+    @pyqtSlot(str)
+    def on_apply(self, html):
+        self.main_window.add_design_cell(html)
+        
+    @pyqtSlot()
+    def on_close(self):
+        self.main_window.design_view.close()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
