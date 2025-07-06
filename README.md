@@ -90,14 +90,17 @@ This opens the editor. Use the toolbar:
 ## 🖼️ Screenshots
 
 **Main Editor Interface**
+
 ![image](https://github.com/user-attachments/assets/d8e1176d-e6f4-4f82-8fc9-f35aec147ff6)
 
 
 **Autocomplete Suggestions**
+
 ![image](https://github.com/user-attachments/assets/208ba602-d9ff-4eba-aaef-4994e5d2f05d)
 
 
 **Design Canvas Tool**
+
 ![image](https://github.com/user-attachments/assets/22504d76-78cc-4100-83b6-d8d5181b41c4)
 
 ![image](https://github.com/user-attachments/assets/741eda2c-e933-4709-af9e-b4e263e631a0)
