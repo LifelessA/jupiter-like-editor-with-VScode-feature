@@ -72,6 +72,11 @@ jedi
 
 ---
 
+## ▶️ run server version
+```bash
+python server.py
+```
+
 ## ▶️ Quick Start
 
 ```bash
