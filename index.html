@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Python Notebook</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/theme/material-darker.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/comment/comment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/matchbrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/edit/closebrackets.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/selection/active-line.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/addon/hint/show-hint.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --cell-bg: #2d2d2d;
+            --border-color: #3a3a3a;
+            --toolbar-bg: #252526;
+        }
+        body {
+            margin: 0;
+            background: var(--bg-color);
+            color: #d4d4d4;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #menu-bar {
+            background: #333;
+            padding: 5px 10px;
+            display: flex;
+            flex-wrap: wrap;
+        }
+        .menu {
+            position: relative;
+            margin-right: 15px;
+        }
+        .menu-btn {
+            background: none;
+            border: none;
+            color: #d4d4d4;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+        .menu-content {
+            display: none;
+            position: absolute;
+            background: #2d2d2d;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+        }
+        .menu-content button {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: none;
+            border: none;
+            padding: 8px 16px;
+            color: #d4d4d4;
+            cursor: pointer;
+        }
+        .menu-content button:hover {
+            background: #3a3a3a;
+        }
+        .menu:hover .menu-content {
+            display: block;
+        }
+        #toolbar {
+            padding: 8px;
+            background: var(--toolbar-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        #cells { padding: 16px; }
+        .cell {
+            margin: 12px 0;
+            background: var(--cell-bg);
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+        }
+        .controls {
+            padding: 6px;
+            background: #333;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            gap: 6px;
+            border-radius: 6px 6px 0 0;
+            flex-wrap: wrap;
+        }
+        .controls button {
+            background: #404040;
+            border: 1px solid #4d4d4d;
+            color: #d4d4d4;
+            padding: 4px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .controls button:hover {
+            background: #2a2d2e;
+        }
+        .CodeMirror {
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            height: auto;
+            padding: 8px 0;
+        }
+        .output {
+            padding: 12px;
+            background: #1e1e1e;
+            border-top: 1px solid var(--border-color);
+            font-family: 'Consolas', monospace;
+            white-space: pre-wrap;
+            line-height: 1.5;
+            overflow-x: auto; /* Prevent overflow */
+        }
+        .output img, .output table {
+            max-width: 100%;
+            height: auto;
+        }
+        .error { color: #ff5555; background: #2d1e1e; padding: 8px; border-radius: 4px; }
+        .running-indicator { color: #55aaff; }
+        #auto-save-btn.active {
+            background-color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+    <div id="menu-bar">
+        <div class="menu">
+            <button class="menu-btn">File</button>
+            <div class="menu-content">
+                <button id="new-btn">New</button>
+                <button id="save-btn">Save</button>
+                <button id="save-as-btn">Save As...</button>
+                <button id="load-btn">Open</button>
+                <button id="auto-save-btn">Auto Save: Off</button>
+                <button id="export-pdf-btn">Export PDF</button>
+            </div>
+        </div>
+        <div class="menu">
+            <button class="menu-btn">Edit</button>
+            <div class="menu-content">
+                <button id="undo-btn">Undo</button>
+                <button id="redo-btn">Redo</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toolbar">
+        <button onclick="addCell('code')">+ Code</button>
+        <button onclick="addCell('markdown')">+ Markdown</button>
+        <button onclick="openDesignTool()">Design</button>
+        <button onclick="runAllCells()" style="margin-left: auto">▶ Run All</button>
+    </div>
+    <div id="cells"></div>
+
+    <script>
+        // WebSocket connection
+        const sessionId = 'notebook_' + Date.now();
+        const socket = new WebSocket(`ws://localhost:8000/ws/${sessionId}`);
+        const editors = {};
+        let currentFilename = 'nn.ipynb';
+                let autoSaveEnabled = false;
+        let autoSaveTimer = null;
+        let fileJustOpened = false; // Flag to prevent immediate auto-save
+
+        socket.onopen = () => console.log("Connected to Python server");
+        socket.onclose = () => console.log("Disconnected from Python server");
+
+        socket.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            switch(data.type) {
+                case 'output':
+                    document.getElementById(`output_${data.cell_id}`).innerHTML = data.output;
+                    break;
+                case 'completions':
+                    if (window.activeEditor) {
+                        window.activeEditor.showHint({
+                            completeSingle: false,
+                            hint: () => ({
+                                list: data.completions,
+                                from: window.completionPos.from,
+                                to: window.completionPos.to
+                            })
+                        });
+                    }
+                    break;
+                case 'design_applied':
+                    addCell('markdown');
+                    const cellId = document.querySelector('.cell:last-child').id;
+                    editors[cellId].setValue(data.html);
+                    runCell(cellId);
+                    break;
+            }
+        };
+
+        function pythonHint(editor, options) {
+            return new Promise((resolve) => {
+                const cursor = editor.getCursor();
+                const token = editor.getTokenAt(cursor);
+                window.activeEditor = editor;
+                window.completionPos = {
+                    from: token.type ? 
+                        CodeMirror.Pos(cursor.line, token.start) : 
+                        CodeMirror.Pos(cursor.line, cursor.ch),
+                    to: CodeMirror.Pos(cursor.line, token.end)
+                };
+                
+                socket.send(JSON.stringify({
+                    type: 'get_completions',
+                    code: editor.getValue(),
+                    line: cursor.line,
+                    column: cursor.ch
+                }));
+                resolve(null); // Will be handled by socket response
+            });
+        }
+
+        function addCell(type = 'code') {
+            const cellId = 'cell_' + Math.random().toString(36).slice(2, 11);
+            const cell = document.createElement('div');
+            cell.className = 'cell';
+            cell.id = cellId;
+            cell.dataset.type = type;
+            cell.innerHTML = `
+                <div class="controls">
+                    <button onclick="runCell('${cellId}')">Run</button>
+                    ${type === 'code' ? `<button onclick="stopCell('${cellId}')">Stop</button>` : ''}
+                    <button onclick="deleteCell('${cellId}')">Delete</button>
+                    <button onclick="moveCell('${cellId}', 'up')">↑</button>
+                    <button onclick="moveCell('${cellId}', 'down')">↓</button>
+                </div>
+                <textarea id="code_${cellId}"></textarea>
+                <div id="output_${cellId}" class="output"></div>
+            `;
+            document.getElementById('cells').appendChild(cell);
+
+            const editor = CodeMirror.fromTextArea(
+                document.getElementById(`code_${cellId}`), 
+                {
+                    mode: type === 'code' ? 'python' : 'markdown',
+                    theme: 'material-darker',
+                    lineNumbers: true,
+                    matchBrackets: true,
+                    autoCloseBrackets: true,
+                    extraKeys: {
+                        "Ctrl-Space": type === 'code' ? "autocomplete" : null,
+                        "Ctrl-/": "toggleComment",
+                        "Shift-Enter": () => runCell(cellId),
+                        "Tab": function(cm) {
+                            if (cm.state.completionActive) {
+                                const selected = cm.state.completionActive.data.list[cm.state.completionActive.widget.selectedHint];
+                                cm.replaceSelection(selected);
+                                cm.state.completionActive.close();
+                            } else if (cm.somethingSelected()) {
+                                cm.execCommand("indentMore");
+                            } else {
+                                cm.execCommand("insertTab");
+                            }
+                        }
+                    },
+                    hintOptions: type === 'code' ? { 
+                        hint: pythonHint, 
+                        completeSingle: false 
+                    } : {}
+                }
+            );
+            editors[cellId] = editor;
+            
+                        editor.on('change', () => {
+                if (fileJustOpened) {
+                    fileJustOpened = false; // Unset the flag on the first change
+                    return;
+                }
+                if (autoSaveEnabled) {
+                    clearTimeout(autoSaveTimer);
+                    autoSaveTimer = setTimeout(() => saveSession(currentFilename, true), 2000);
+                }
+            });
+
+            if (type === 'markdown') {
+                const outputDiv = document.getElementById(`output_${cellId}`);
+                const editorWrapper = editor.getWrapperElement();
+                outputDiv.style.display = 'none';
+                outputDiv.addEventListener('click', () => {
+                    editorWrapper.style.display = 'block';
+                    outputDiv.style.display = 'none';
+                    editor.focus();
+                });
+            }
+        }
+
+        function runCell(cellId) {
+            const cell = document.getElementById(cellId);
+            if (cell.dataset.type === 'code') {
+                document.getElementById(`output_${cellId}`).innerHTML = 
+                    '<div class="running-indicator">Running...</div>';
+                
+                socket.send(JSON.stringify({
+                    type: 'run_code',
+                    cell_id: cellId,
+                    code: editors[cellId].getValue()
+                }));
+            } else {
+                const outputDiv = document.getElementById(`output_${cellId}`);
+                const editorWrapper = editors[cellId].getWrapperElement();
+                outputDiv.innerHTML = marked.parse(editors[cellId].getValue());
+                outputDiv.style.display = 'block';
+                editorWrapper.style.display = 'none';
+            }
+        }
+
+        function stopCell(cellId) {
+            document.getElementById(`output_${cellId}`).innerHTML =
+                '<div class="error">Execution interrupted by user.</div>';
+        }
+
+        function deleteCell(cellId) {
+            document.getElementById(cellId).remove();
+            delete editors[cellId];
+        }
+
+        function moveCell(cellId, direction) {
+            const cell = document.getElementById(cellId);
+            const parent = cell.parentNode;
+            if (direction === 'up' && cell.previousElementSibling) {
+                parent.insertBefore(cell, cell.previousElementSibling);
+            } else if (direction === 'down' && cell.nextElementSibling) {
+                parent.insertBefore(cell.nextElementSibling, cell);
+            }
+        }
+
+        function runAllCells() {
+            Object.keys(editors).forEach(id => runCell(id));
+        }
+
+        function clearCells() {
+            document.getElementById('cells').innerHTML = '';
+            for (let id in editors) {
+                delete editors[id];
+            }
+        }
+
+        function openDesignTool() {
+            const designWindow = window.open(`/design?notebook_session_id=${sessionId}`);
+        }
+
+        function getNotebookContent() {
+            const cells = Array.from(document.querySelectorAll('.cell')).map(c => {
+                const cellType = c.dataset.type;
+                const source = editors[c.id].getValue().split('\n');
+                const ipynbCell = {
+                    cell_type: cellType,
+                    source: source,
+                    metadata: {}
+                };
+                if (cellType === 'code') {
+                    ipynbCell.outputs = [];
+                    ipynbCell.execution_count = null;
+                }
+                return ipynbCell;
+            });
+
+            return JSON.stringify({
+                cells: cells,
+                metadata: {
+                    kernelspec: {
+                        display_name: "Python 3",
+                        language: "python",
+                        name: "python3"
+                    },
+                    language_info: {
+                        name: "python"
+                    }
+                },
+                nbformat: 4,
+                nbformat_minor: 4
+            }, null, 2);
+        }
+
+        async function saveSession(filename, isAuto = false) {
+            const content = getNotebookContent();
+            
+            try {
+                const response = await fetch('/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: filename, content: content })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    currentFilename = filename;
+                    if (!isAuto) alert(result.message);
+                    else console.log(result.message);
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (err) {
+                console.error("Error saving session:", err);
+                if (!isAuto) alert("Error saving session: " + err.message);
+            }
+        }
+
+        function loadSession() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json,.ipynb';
+
+            input.onchange = e => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                currentFilename = file.name;
+                fileJustOpened = true; // Set flag to prevent immediate auto-save
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        let cellsToLoad;
+
+                        if (data.cells && data.nbformat) {
+                            cellsToLoad = data.cells.map(cell => ({
+                                type: cell.cell_type,
+                                code: Array.isArray(cell.source) ? cell.source.join('') : cell.source
+                            }));
+                        } else if (Array.isArray(data)) {
+                            cellsToLoad = data;
+                        } else {
+                            throw new Error("Unsupported file format");
+                        }
+                        
+                        clearCells();
+                        cellsToLoad.forEach(cell => {
+                            addCell(cell.type);
+                            const cellId = document.querySelector('.cell:last-child').id;
+                            editors[cellId].setValue(cell.code);
+                            if (cell.type === 'markdown') {
+                                runCell(cellId);
+                            }
+                        });
+                    } catch (err) {
+                        console.error("Error parsing notebook file:", err);
+                        alert("Error: Could not parse the selected file. " + err.message);
+                    }
+                };
+                reader.onerror = () => {
+                    console.error("Error reading file:", reader.error);
+                    alert("Error reading the selected file.");
+                };
+                reader.readAsText(file);
+            };
+
+            input.click();
+        }
+
+        // Menu event listeners
+        document.getElementById('new-btn').addEventListener('click', () => {
+            if (confirm('Start new session? Unsaved changes will be lost.')) {
+                clearCells();
+                addCell('code');
+                currentFilename = 'untitled.ipynb';
+            }
+        });
+        
+        document.getElementById('save-btn').addEventListener('click', () => {
+            saveSession(currentFilename);
+        });
+        
+        document.getElementById('save-as-btn').addEventListener('click', () => {
+            const filename = prompt("Enter filename:", currentFilename);
+            if (filename) saveSession(filename);
+        });
+        
+        document.getElementById('load-btn').addEventListener('click', loadSession);
+        
+        document.getElementById('auto-save-btn').addEventListener('click', (e) => {
+            autoSaveEnabled = !autoSaveEnabled;
+            e.target.textContent = `Auto Save: ${autoSaveEnabled ? 'On' : 'Off'}`;
+            e.target.classList.toggle('active', autoSaveEnabled);
+            if(autoSaveEnabled) {
+                saveSession(currentFilename, true);
+            }
+        });
+
+        document.getElementById('export-pdf-btn').addEventListener('click', () => {
+            window.print();
+        });
+
+        // Initialize first cell
+        addCell('code');
+    </script>
+</body>
+</html>
