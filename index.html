@@ -135,6 +135,22 @@
         #auto-save-btn.active {
             background-color: #4CAF50;
         }
+        .CodeMirror-hints {
+            background: #2d2d2d;
+            border: 1px solid #3a3a3a;
+            border-radius: 4px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+        .CodeMirror-hint {
+            color: #d4d4d4;
+            padding: 4px 8px;
+            cursor: pointer;
+        }
+        .CodeMirror-hint-active {
+            background: #3a3a3a;
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
@@ -180,6 +196,8 @@
         socket.onopen = () => console.log("Connected to Python server");
         socket.onclose = () => console.log("Disconnected from Python server");
 
+        let completionCallback = null;
+
         socket.onmessage = (event) => {
             const data = JSON.parse(event.data);
             switch(data.type) {
@@ -187,15 +205,13 @@
                     document.getElementById(`output_${data.cell_id}`).innerHTML = data.output;
                     break;
                 case 'completions':
-                    if (window.activeEditor) {
-                        window.activeEditor.showHint({
-                            completeSingle: false,
-                            hint: () => ({
-                                list: data.completions,
-                                from: window.completionPos.from,
-                                to: window.completionPos.to
-                            })
+                    if (completionCallback && data.request_id === window.completionRequestId) {
+                        completionCallback({
+                            list: data.completions,
+                            from: window.completionPos.from,
+                            to: window.completionPos.to
                         });
+                        completionCallback = null;
                     }
                     break;
                 case 'design_applied':
@@ -211,21 +227,29 @@
             return new Promise((resolve) => {
                 const cursor = editor.getCursor();
                 const token = editor.getTokenAt(cursor);
-                window.activeEditor = editor;
-                window.completionPos = {
-                    from: token.type ? 
-                        CodeMirror.Pos(cursor.line, token.start) : 
-                        CodeMirror.Pos(cursor.line, cursor.ch),
-                    to: CodeMirror.Pos(cursor.line, token.end)
-                };
                 
+                const from = token.string.trim() ? CodeMirror.Pos(cursor.line, token.start) : cursor;
+                const to = cursor;
+
+                window.completionPos = { from, to };
+                window.completionRequestId = 'req_' + Date.now();
+
+                completionCallback = resolve;
+
                 socket.send(JSON.stringify({
                     type: 'get_completions',
+                    request_id: window.completionRequestId,
                     code: editor.getValue(),
                     line: cursor.line,
                     column: cursor.ch
                 }));
-                resolve(null); // Will be handled by socket response
+
+                // Timeout to prevent hanging
+                setTimeout(() => {
+                    if (completionCallback) {
+                        completionCallback(null);
+                    }
+                }, 1000);
             });
         }
 
@@ -290,6 +314,33 @@
                     autoSaveTimer = setTimeout(() => saveSession(currentFilename, true), 2000);
                 }
             });
+
+            if (type === 'code') {
+                let timeout;
+                editor.on('keyup', (cm, event) => {
+                    // Ignore navigation/control keys that are not part of the input
+                    if (event.ctrlKey || event.altKey || event.metaKey ||
+                        ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+                         'Enter', 'Tab', 'Escape', 'Shift', 'Control', 'Alt', 'Meta'].includes(event.key)) {
+                        return;
+                    }
+
+                    // If the hint window is already active, let it handle the keypress.
+                    // This prevents the selection from resetting.
+                    if (cm.state.completionActive) {
+                        return;
+                    }
+
+                    // Trigger autocomplete on specific keys after a short delay
+                    if (event.key === '.' || /[a-zA-Z0-9_]/.test(event.key) || event.key === 'Backspace') {
+                        clearTimeout(timeout);
+                        timeout = setTimeout(() => {
+                            // Manually trigger the autocomplete
+                            CodeMirror.commands.autocomplete(cm, null, {completeSingle: false});
+                        }, 150); // A shorter delay for better responsiveness
+                    }
+                });
+            }
 
             if (type === 'markdown') {
                 const outputDiv = document.getElementById(`output_${cellId}`);
