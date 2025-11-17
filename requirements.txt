@@ -1,5 +1,10 @@
 PyQt6
 PyQt6-WebEngine
+fastapi
+uvicorn
+python-multipart
 matplotlib
 pandas
 jedi
+streamlit
+'uvicorn[standard]'
